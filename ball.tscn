@@ -1,0 +1,62 @@
+[gd_scene load_steps=5 format=3 uid="uid://dgxqm3g52t776"]
+
+[ext_resource type="Texture2D" uid="uid://bvuka0n25bflf" path="res://plain-circle.png" id="1_x8fbi"]
+
+[sub_resource type="GDScript" id="GDScript_41u45"]
+script/source = "extends StaticBody2D
+@export var speed:int
+var dir:Vector2
+
+func _ready() -> void:
+	#var mousePos = get_global_mouse_position() 
+	#dir = (mousePos - global_position).normalized()
+	
+	#different colors
+	var random_color = Color.from_hsv(randf(), 1.0, 1.0)
+	$Sprite2D.modulate = random_color
+	pass
+func _process(delta: float) -> void:
+	position += dir * speed
+	pass
+
+
+func _on_timer_timeout() -> void:
+	#remove after 10 sec 
+	print(\"queue free\")
+	queue_free()
+"
+
+[sub_resource type="GDScript" id="GDScript_x8fbi"]
+script/source = "extends Area2D
+
+
+
+func _on_mouse_entered() -> void:
+	print(\"collided\")
+	get_tree().paused = true
+	pass # Replace with function body.
+"
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_x8fbi"]
+
+[node name="ball" type="StaticBody2D"]
+script = SubResource("GDScript_41u45")
+speed = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.2, 0.2)
+texture = ExtResource("1_x8fbi")
+
+[node name="Area2D" type="Area2D" parent="."]
+script = SubResource("GDScript_x8fbi")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+scale = Vector2(4.72, 4.72)
+shape = SubResource("CircleShape2D_x8fbi")
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 10.0
+autostart = true
+
+[connection signal="mouse_entered" from="Area2D" to="Area2D" method="_on_mouse_entered"]
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

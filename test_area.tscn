@@ -1,0 +1,105 @@
+[gd_scene load_steps=4 format=3 uid="uid://d2gxesnrvs86y"]
+
+[ext_resource type="PackedScene" uid="uid://b0yrf2et84y" path="res://gameover.tscn" id="1_64fjj"]
+
+[sub_resource type="GDScript" id="GDScript_fw7ol"]
+script/source = "extends Node2D
+const BALL = preload(\"res://ball.tscn\")
+@onready var label: Label = $\"../../CanvasLayer/Label\"
+
+
+func _ready() -> void:
+	spawnBALLS()
+func _process(delta: float) -> void:
+	if Input.is_action_just_pressed(\"ui_accept\"):
+		spawnBALLS()
+		
+func spawnBALLS():
+	var BALLIns = BALL.instantiate()
+	var screen_size = get_viewport().get_visible_rect().size
+	var spawn_pos = Vector2()
+	var side = randi() % 4 
+	
+	match side:
+		0:  
+			spawn_pos.x = -randf_range(200, 500)
+			spawn_pos.y = randf() * screen_size.y
+		1: 
+			spawn_pos.x = randf() * screen_size.x
+			spawn_pos.y = -randf_range(50, 200)
+		2: 
+			spawn_pos.x = screen_size.x + randf_range(50, 200)
+			spawn_pos.y = randf() * screen_size.y
+		3: 
+			spawn_pos.x = randf() * screen_size.x
+			spawn_pos.y = screen_size.y + randf_range(50, 200)
+	
+	
+	
+	var mousePos = get_global_mouse_position() 
+	BALLIns.dir = (mousePos - spawn_pos).normalized()
+	BALLIns.position = spawn_pos
+	BALLIns.speed = BALLIns.speed + (0.1*label.time)
+	
+	
+	#random 50% plus size
+	var ranScale = randf_range(1.0,1.5)
+	BALLIns.set_scale(Vector2(ranScale,ranScale))
+
+
+	get_parent().add_child.call_deferred(BALLIns)
+	
+"
+
+[sub_resource type="GDScript" id="GDScript_64fjj"]
+script/source = "extends Label
+var time:int = 1
+@onready var ball_spawner: Node2D = $\"../../CanvasLayer2/ballSpawner\"
+
+
+
+func _on_timer_timeout() -> void:
+	text = str(time)
+	time+=1
+	
+	#spawn difficulty
+	spawnLeBalls(1 + (0.1 * time))
+
+
+func spawnLeBalls(howManyTimes:int):
+	#spawn twice per second
+	for i in range(howManyTimes):
+		ball_spawner.spawnBALLS()
+		ball_spawner.spawnBALLS()
+		print(\"spawned BALLS\")
+"
+
+[node name="testArea" type="Node2D"]
+
+[node name="CanvasLayer2" type="CanvasLayer" parent="."]
+
+[node name="ballSpawner" type="Node2D" parent="CanvasLayer2"]
+z_index = 1
+script = SubResource("GDScript_fw7ol")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="CanvasLayer"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -14.5
+offset_right = 14.5
+offset_bottom = 70.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 51
+text = "0"
+script = SubResource("GDScript_64fjj")
+
+[node name="Timer" type="Timer" parent="CanvasLayer/Label"]
+autostart = true
+
+[node name="Gameover" parent="CanvasLayer" instance=ExtResource("1_64fjj")]
+visible = false
+
+[connection signal="timeout" from="CanvasLayer/Label/Timer" to="CanvasLayer/Label" method="_on_timer_timeout"]
